@@ -28,8 +28,8 @@ const buildClobClient = async (provider: ethers.providers.JsonRpcProvider): Prom
     const { wallet, signatureType, funderAddress } = resolvePolymarketClientConfig(provider);
     const originalConsoleLog = console.log;
     const originalConsoleError = console.error;
-    console.log = function () {};
-    console.error = function () {};
+    console.log = function () { };
+    console.error = function () { };
 
     const initialClient = new ClobClient(
         CLOB_HTTP_URL,

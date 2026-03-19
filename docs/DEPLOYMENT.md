@@ -11,6 +11,17 @@ This guide covers deploying the Polymarket Copy Trading Bot to production enviro
 
 ## Deployment Options
 
+### Railway
+
+Use Railway when you want the simplest managed deployment for a single always-on worker.
+
+1. Connect the GitHub repository in Railway
+2. Add all required environment variables
+3. Deploy using the included `railway.json`
+4. Watch logs to confirm MongoDB, RPC, and CLOB initialization
+
+Detailed instructions: [docs/RAILWAY_DEPLOYMENT.md](./RAILWAY_DEPLOYMENT.md)
+
 ### Direct Node.js Deployment
 
 #### On Linux Server (systemd)

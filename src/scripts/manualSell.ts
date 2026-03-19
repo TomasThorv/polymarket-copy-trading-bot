@@ -34,8 +34,8 @@ const createClobClient = async (
 
     const originalConsoleLog = console.log;
     const originalConsoleError = console.error;
-    console.log = function () {};
-    console.error = function () {};
+    console.log = function () { };
+    console.error = function () { };
 
     let clobClient = new ClobClient(
         CLOB_HTTP_URL,

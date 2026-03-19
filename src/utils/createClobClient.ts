@@ -21,8 +21,8 @@ const createClobClient = async (): Promise<ClobClient> => {
     // Suppress console output during API key creation
     const originalConsoleLog = console.log;
     const originalConsoleError = console.error;
-    console.log = function () {};
-    console.error = function () {};
+    console.log = function () { };
+    console.error = function () { };
 
     let creds = await clobClient.createApiKey();
     if (!creds.key) {
