@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import { ENV } from './env';
-import chalk from 'chalk';
+import chalk from '../utils/chalk';
 
 const uri = ENV.MONGO_URI || 'mongodb://localhost:27017/polymarket_copytrading';
 
