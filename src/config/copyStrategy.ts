@@ -53,6 +53,7 @@ export interface CopyStrategyConfig {
     minOrderSizeUSD: number; // Minimum size for a single order
     maxPositionSizeUSD?: number; // Maximum total size for a position (optional)
     maxDailyVolumeUSD?: number; // Maximum total volume per day (optional)
+    maxBalanceUsagePercent?: number; // Maximum percentage of available balance to use per trade
 }
 
 export interface OrderSizeCalculation {
@@ -130,6 +131,16 @@ export function calculateOrderSize(
                 finalAmount = allowedAmount;
                 reasoning += ` → Reduced to fit position limit`;
             }
+        }
+    }
+
+    // Step 3.5: Apply per-trade balance usage cap (if configured)
+    if (config.maxBalanceUsagePercent && config.maxBalanceUsagePercent < 100) {
+        const maxAllowedByPolicy = availableBalance * (config.maxBalanceUsagePercent / 100);
+        if (finalAmount > maxAllowedByPolicy) {
+            finalAmount = maxAllowedByPolicy;
+            reducedByBalance = true;
+            reasoning += ` → Capped at ${config.maxBalanceUsagePercent}% of balance ($${maxAllowedByPolicy.toFixed(2)})`;
         }
     }
 
@@ -221,6 +232,13 @@ export function validateCopyStrategyConfig(config: CopyStrategyConfig): string[]
         errors.push('minOrderSizeUSD cannot be greater than maxOrderSizeUSD');
     }
 
+    if (
+        config.maxBalanceUsagePercent !== undefined &&
+        (config.maxBalanceUsagePercent <= 0 || config.maxBalanceUsagePercent > 100)
+    ) {
+        errors.push('maxBalanceUsagePercent must be between 0 and 100');
+    }
+
     // Validate adaptive parameters
     if (config.strategy === CopyStrategy.ADAPTIVE) {
         if (!config.adaptiveMinPercent || !config.adaptiveMaxPercent) {
@@ -250,6 +268,7 @@ export function getRecommendedConfig(balanceUSD: number): CopyStrategyConfig {
             minOrderSizeUSD: 1.0,
             maxPositionSizeUSD: 50.0,
             maxDailyVolumeUSD: 100.0,
+            maxBalanceUsagePercent: 10.0,
         };
     } else if (balanceUSD < 2000) {
         // Medium balance: Balanced
@@ -260,6 +279,7 @@ export function getRecommendedConfig(balanceUSD: number): CopyStrategyConfig {
             minOrderSizeUSD: 1.0,
             maxPositionSizeUSD: 200.0,
             maxDailyVolumeUSD: 500.0,
+            maxBalanceUsagePercent: 10.0,
         };
     } else {
         // Large balance: Adaptive
@@ -273,6 +293,7 @@ export function getRecommendedConfig(balanceUSD: number): CopyStrategyConfig {
             minOrderSizeUSD: 1.0,
             maxPositionSizeUSD: 1000.0,
             maxDailyVolumeUSD: 2000.0,
+            maxBalanceUsagePercent: 10.0,
         };
     }
 }

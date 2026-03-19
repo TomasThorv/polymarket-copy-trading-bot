@@ -4,7 +4,7 @@ import fetchData from '../utils/fetchData';
 import Logger from '../utils/logger';
 
 const USER_ADDRESSES = ENV.USER_ADDRESSES;
-const TOO_OLD_TIMESTAMP = ENV.TOO_OLD_TIMESTAMP;
+const TOO_OLD_HOURS = ENV.TOO_OLD_TIMESTAMP;
 const FETCH_INTERVAL = ENV.FETCH_INTERVAL;
 
 if (!USER_ADDRESSES || USER_ADDRESSES.length === 0) {
@@ -111,6 +111,7 @@ const fetchTradeData = async () => {
             // Fetch trade activities from Polymarket API
             const apiUrl = `https://data-api.polymarket.com/activity?user=${address}&type=TRADE`;
             const activities = await fetchData(apiUrl);
+            const cutoffTimestamp = Math.floor(Date.now() / 1000) - TOO_OLD_HOURS * 60 * 60;
 
             if (!Array.isArray(activities) || activities.length === 0) {
                 continue;
@@ -119,7 +120,7 @@ const fetchTradeData = async () => {
             // Process each activity
             for (const activity of activities) {
                 // Skip if too old
-                if (activity.timestamp < TOO_OLD_TIMESTAMP) {
+                if (activity.timestamp < cutoffTimestamp) {
                     continue;
                 }
 

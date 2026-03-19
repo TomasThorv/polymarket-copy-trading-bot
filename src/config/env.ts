@@ -114,6 +114,19 @@ const validateNumericConfig = (): void => {
             `Invalid NETWORK_RETRY_LIMIT: ${process.env.NETWORK_RETRY_LIMIT}. Must be between 1 and 10.`
         );
     }
+
+    if (process.env.MAX_BALANCE_USAGE_PERCENT) {
+        const maxBalanceUsagePercent = parseFloat(process.env.MAX_BALANCE_USAGE_PERCENT);
+        if (
+            isNaN(maxBalanceUsagePercent) ||
+            maxBalanceUsagePercent <= 0 ||
+            maxBalanceUsagePercent > 100
+        ) {
+            throw new Error(
+                `Invalid MAX_BALANCE_USAGE_PERCENT: ${process.env.MAX_BALANCE_USAGE_PERCENT}. Must be between 0 and 100.`
+            );
+        }
+    }
 };
 
 /**
@@ -169,11 +182,26 @@ const validateUrls = (): void => {
     }
 };
 
+const validateOptionalConfig = (): void => {
+    const configuredSignatureType = process.env.CLOB_SIGNATURE_TYPE;
+    if (!configuredSignatureType) {
+        return;
+    }
+
+    const allowedValues = ['AUTO', 'EOA', 'POLY_PROXY', 'POLY_GNOSIS_SAFE'];
+    if (!allowedValues.includes(configuredSignatureType.toUpperCase())) {
+        throw new Error(
+            `Invalid CLOB_SIGNATURE_TYPE: ${configuredSignatureType}. Must be one of ${allowedValues.join(', ')}.`
+        );
+    }
+};
+
 // Run all validations
 validateRequiredEnv();
 validateAddresses();
 validateNumericConfig();
 validateUrls();
+validateOptionalConfig();
 
 // Parse USER_ADDRESSES: supports both comma-separated string and JSON array
 const parseUserAddresses = (input: string): string[] => {
@@ -255,6 +283,9 @@ const parseCopyStrategy = (): CopyStrategyConfig => {
             maxDailyVolumeUSD: process.env.MAX_DAILY_VOLUME_USD
                 ? parseFloat(process.env.MAX_DAILY_VOLUME_USD)
                 : undefined,
+            maxBalanceUsagePercent: process.env.MAX_BALANCE_USAGE_PERCENT
+                ? parseFloat(process.env.MAX_BALANCE_USAGE_PERCENT)
+                : undefined,
         };
 
         // Parse tiered multipliers if configured (even for legacy mode)
@@ -288,6 +319,9 @@ const parseCopyStrategy = (): CopyStrategyConfig => {
             : undefined,
         maxDailyVolumeUSD: process.env.MAX_DAILY_VOLUME_USD
             ? parseFloat(process.env.MAX_DAILY_VOLUME_USD)
+            : undefined,
+        maxBalanceUsagePercent: process.env.MAX_BALANCE_USAGE_PERCENT
+            ? parseFloat(process.env.MAX_BALANCE_USAGE_PERCENT)
             : undefined,
     };
 
@@ -348,4 +382,5 @@ export const ENV = {
     MONGO_URI: process.env.MONGO_URI as string,
     RPC_URL: process.env.RPC_URL as string,
     USDC_CONTRACT_ADDRESS: process.env.USDC_CONTRACT_ADDRESS as string,
+    CLOB_SIGNATURE_TYPE: process.env.CLOB_SIGNATURE_TYPE || 'AUTO',
 };

@@ -1,8 +1,8 @@
 import { ethers } from 'ethers';
 import { AssetType, ClobClient, OrderType, Side } from '@polymarket/clob-client';
-import { SignatureType } from '@polymarket/order-utils';
 import { ENV } from '../config/env';
 import fetchData from '../utils/fetchData';
+import { resolvePolymarketClientConfig } from '../utils/polymarketClientConfig';
 
 const PROXY_WALLET = ENV.PROXY_WALLET;
 const PRIVATE_KEY = ENV.PRIVATE_KEY;
@@ -32,27 +32,13 @@ interface Position {
     outcome?: string;
 }
 
-const isGnosisSafe = async (
-    address: string,
-    provider: ethers.providers.JsonRpcProvider
-): Promise<boolean> => {
-    try {
-        const code = await provider.getCode(address);
-        return code !== '0x';
-    } catch (error) {
-        console.error(`Error checking wallet type: ${error}`);
-        return false;
-    }
-};
-
 const createClobClient = async (
     provider: ethers.providers.JsonRpcProvider
 ): Promise<ClobClient> => {
-    const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
-    const isProxySafe = await isGnosisSafe(PROXY_WALLET, provider);
-    const signatureType = isProxySafe ? SignatureType.POLY_GNOSIS_SAFE : SignatureType.EOA;
+    const { wallet, signatureType, signatureTypeLabel, funderAddress } =
+        resolvePolymarketClientConfig(provider);
 
-    console.log(`Wallet type: ${isProxySafe ? 'Gnosis Safe' : 'EOA'}`);
+    console.log(`Polymarket signature mode: ${signatureTypeLabel}`);
 
     const originalConsoleLog = console.log;
     const originalConsoleError = console.error;
@@ -65,7 +51,7 @@ const createClobClient = async (
         wallet,
         undefined,
         signatureType,
-        isProxySafe ? PROXY_WALLET : undefined
+        funderAddress
     );
 
     let creds = await clobClient.createApiKey();
@@ -79,7 +65,7 @@ const createClobClient = async (
         wallet,
         creds,
         signatureType,
-        isProxySafe ? PROXY_WALLET : undefined
+        funderAddress
     );
 
     console.log = originalConsoleLog;

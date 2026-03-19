@@ -1,7 +1,7 @@
 import { ethers } from 'ethers';
 import { AssetType, ClobClient, getContractConfig } from '@polymarket/clob-client';
-import { SignatureType } from '@polymarket/order-utils';
 import { ENV } from '../config/env';
+import { resolvePolymarketClientConfig } from '../utils/polymarketClientConfig';
 
 const PROXY_WALLET = ENV.PROXY_WALLET;
 const PRIVATE_KEY = ENV.PRIVATE_KEY;
@@ -25,10 +25,7 @@ const USDC_ABI = [
 ];
 
 const buildClobClient = async (provider: ethers.providers.JsonRpcProvider): Promise<ClobClient> => {
-    const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
-    const code = await provider.getCode(PROXY_WALLET);
-    const isProxySafe = code !== '0x';
-    const signatureType = isProxySafe ? SignatureType.POLY_GNOSIS_SAFE : SignatureType.EOA;
+    const { wallet, signatureType, funderAddress } = resolvePolymarketClientConfig(provider);
     const originalConsoleLog = console.log;
     const originalConsoleError = console.error;
     console.log = function () {};
@@ -40,7 +37,7 @@ const buildClobClient = async (provider: ethers.providers.JsonRpcProvider): Prom
         wallet,
         undefined,
         signatureType,
-        isProxySafe ? PROXY_WALLET : undefined
+        funderAddress
     );
 
     let creds;
@@ -84,7 +81,7 @@ const buildClobClient = async (provider: ethers.providers.JsonRpcProvider): Prom
         wallet,
         creds,
         signatureType,
-        isProxySafe ? PROXY_WALLET : undefined
+        funderAddress
     );
 };
 
