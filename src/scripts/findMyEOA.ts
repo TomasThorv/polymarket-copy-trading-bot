@@ -107,12 +107,11 @@ async function analyzeWallets() {
     console.log('💡 HOW TO ACCESS POSITIONS ON FRONTEND:\n');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
-    console.log('🔧 OPTION 1: Import private key into MetaMask\n');
-    console.log('   1. Open MetaMask');
-    console.log('   2. Click account icon -> Import Account');
-    console.log('   3. Paste your PRIVATE_KEY from .env file');
-    console.log('   4. Connect to Polymarket with this account');
-    console.log('   5. Polymarket will automatically show the correct proxy wallet\n');
+    console.log('🔧 OPTION 1: Connect the wallet you already control\n');
+    console.log('   1. Open your wallet software');
+    console.log('   2. Connect the account you normally use with Polymarket');
+    console.log('   3. Open Polymarket with that connected account');
+    console.log('   4. Polymarket will automatically show the correct proxy wallet\n');
 
     console.log('⚠️  WARNING: Never share your private key!\n');
 
