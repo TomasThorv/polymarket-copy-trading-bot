@@ -134,10 +134,15 @@ export function calculateOrderSize(
         }
     }
 
-    // Step 3.5: Apply per-trade balance usage cap (if configured)
+    // Step 3.5: Apply per-trade balance usage cap only when it can still satisfy
+    // the configured minimum order size. This avoids contradictory behavior for
+    // very small balances, e.g. a 10% cap on sub-$10 cash with a $1 minimum.
     if (config.maxBalanceUsagePercent && config.maxBalanceUsagePercent < 100) {
         const maxAllowedByPolicy = availableBalance * (config.maxBalanceUsagePercent / 100);
-        if (finalAmount > maxAllowedByPolicy) {
+        const minimumBalanceForPolicyCap =
+            config.minOrderSizeUSD / (config.maxBalanceUsagePercent / 100);
+
+        if (availableBalance >= minimumBalanceForPolicyCap && finalAmount > maxAllowedByPolicy) {
             finalAmount = maxAllowedByPolicy;
             reducedByBalance = true;
             reasoning += ` → Capped at ${config.maxBalanceUsagePercent}% of balance ($${maxAllowedByPolicy.toFixed(2)})`;
