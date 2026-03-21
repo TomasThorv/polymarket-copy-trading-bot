@@ -174,28 +174,48 @@ const postOrder = async (
         // Get current position size for position limit checks
         const currentPositionValue = my_position ? my_position.size * my_position.avgPrice : 0;
 
-        // Use new copy strategy system
-        const orderCalc = calculateOrderSize(
-            COPY_STRATEGY_CONFIG,
-            trade.usdcSize,
-            my_balance,
-            currentPositionValue
-        );
+        let remaining: number;
+        let orderCalcReasoning: string;
 
-        // Log the calculation reasoning
-        Logger.info(`📊 ${orderCalc.reasoning}`);
+        if (ENV.SAME_TRADE_CAP) {
+            // Flat cap mode: every trade gets the same fixed dollar amount
+            const capAmount = ENV.TRADE_CAP_AMOUNT;
+            const maxAffordable = my_balance * 0.99;
+            remaining = Math.min(capAmount, maxAffordable);
+            orderCalcReasoning = `Flat cap: $${capAmount.toFixed(2)}`;
 
-        // Check if order should be executed
-        if (orderCalc.finalAmount === 0) {
-            Logger.warning(`❌ Cannot execute: ${orderCalc.reasoning}`);
-            if (orderCalc.belowMinimum) {
-                Logger.warning(`💡 Increase COPY_SIZE or wait for larger trades`);
+            if (remaining < 1.0) {
+                Logger.warning(`❌ Cannot execute: balance too low ($${my_balance.toFixed(2)})`);
+                await UserActivity.updateOne({ _id: trade._id }, { bot: true });
+                return;
             }
-            await UserActivity.updateOne({ _id: trade._id }, { bot: true });
-            return;
-        }
 
-        let remaining = orderCalc.finalAmount;
+            Logger.info(`📊 ${orderCalcReasoning}`);
+        } else {
+            // Use new copy strategy system
+            const orderCalc = calculateOrderSize(
+                COPY_STRATEGY_CONFIG,
+                trade.usdcSize,
+                my_balance,
+                currentPositionValue
+            );
+
+            // Log the calculation reasoning
+            Logger.info(`📊 ${orderCalc.reasoning}`);
+
+            // Check if order should be executed
+            if (orderCalc.finalAmount === 0) {
+                Logger.warning(`❌ Cannot execute: ${orderCalc.reasoning}`);
+                if (orderCalc.belowMinimum) {
+                    Logger.warning(`💡 Increase COPY_SIZE or wait for larger trades`);
+                }
+                await UserActivity.updateOne({ _id: trade._id }, { bot: true });
+                return;
+            }
+
+            remaining = orderCalc.finalAmount;
+            orderCalcReasoning = orderCalc.reasoning;
+        }
 
         let retry = 0;
         let abortDueToFunds = false;

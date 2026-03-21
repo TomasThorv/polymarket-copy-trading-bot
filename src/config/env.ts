@@ -383,4 +383,7 @@ export const ENV = {
     RPC_URL: process.env.RPC_URL as string,
     USDC_CONTRACT_ADDRESS: process.env.USDC_CONTRACT_ADDRESS as string,
     CLOB_SIGNATURE_TYPE: process.env.CLOB_SIGNATURE_TYPE || 'AUTO',
+    // Flat trade cap: every trade gets the same fixed dollar amount
+    SAME_TRADE_CAP: process.env.SAME_TRADE_CAP === 'true',
+    TRADE_CAP_AMOUNT: parseFloat(process.env.TRADE_CAP_AMOUNT || '2.0'),
 };
